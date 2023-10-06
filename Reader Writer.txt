@@ -1,0 +1,58 @@
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+public class ReaderWriterProblem {
+    private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private static final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+    private static final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+
+    private static int sharedResource = 0;
+
+    public static void main(String[] args) {
+        Runnable reader = () -> {
+            while (true) {
+                readData();
+                try {
+                    Thread.sleep(1000); // Simulate reading operation
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        };
+
+        Runnable writer = () -> {
+            while (true) {
+                writeData();
+                try {
+                    Thread.sleep(2000); // Simulate writing operation
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        };
+
+        // Start multiple reader and writer threads
+        for (int i = 0; i < 3; i++) {
+            new Thread(reader).start();
+            new Thread(writer).start();
+        }
+    }
+
+    private static void readData() {
+        readLock.lock();
+        try {
+            System.out.println("Reader is reading: " + sharedResource);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    private static void writeData() {
+        writeLock.lock();
+        try {
+            sharedResource++;
+            System.out.println("Writer is writing: " + sharedResource);
+        } finally {
+            writeLock.unlock();
+        }
+    }
+}
